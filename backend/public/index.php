@@ -12,10 +12,11 @@ use App\Models\User;
 use App\Utils\JwtHandler;
 
 require __DIR__ . '/../vendor/autoload.php';
-require __DIR__ . '/../config/db.php';
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->safeLoad();
+
+require __DIR__ . '/../config/db.php';
 
 $container = new \DI\Container();
 AppFactory::setContainer($container);
@@ -28,10 +29,6 @@ $container->set(User::class, function () use ($pdo) {
     return new User($pdo);
 });
 
-$container->set(UsersController::class, function () use ($pdo) {
-    return new UsersController($pdo);
-});
-
 $container->set(JwtHandler::class, function () {
     return new JwtHandler();
 });
@@ -40,8 +37,8 @@ $container->set(AuthController::class, function ($c) {
     return new AuthController($c->get(User::class), $c->get(JwtHandler::class));
 });
 
-$container->set(UsersController::class, function ($c) {
-    return new UsersController($c->get(User::class), $c->get(JwtHandler::class));
+$container->set(UsersController::class, function () use ($pdo) {
+    return new UsersController($pdo);
 });
 
 $container->set(AuthMiddleware::class, function ($c) {

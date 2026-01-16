@@ -1,0 +1,27 @@
+# Environment
+backend/.env
+frontend/.env
+
+# Dependencies
+backend/vendor/
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+*.cache
+
+# Claude
+.claude/

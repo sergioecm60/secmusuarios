@@ -91,7 +91,7 @@ class UsersController
     {
         if (!$this->pdoSecmalquileres) return [];
         try {
-            $stmt = $this->pdoSecmalquileres->query("SELECT 'secmalquileres' as sistema, id, usuario as username, email, nombre as nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoSecmalquileres->query("SELECT 'secmalquileres' as sistema, id, username, email, nombre_completo, rol, activo, fecha_registro as created_at FROM users ORDER BY id");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -102,7 +102,7 @@ class UsersController
     {
         if (!$this->pdoSecmti) return [];
         try {
-            $stmt = $this->pdoSecmti->query("SELECT 'secmti' as sistema, id, username, email, nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoSecmti->query("SELECT 'secmti' as sistema, id, username, email, full_name as nombre_completo, role as rol, 1 as activo, created_at FROM users ORDER BY id");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -113,7 +113,7 @@ class UsersController
     {
         if (!$this->pdoSecmautos) return [];
         try {
-            $stmt = $this->pdoSecmautos->query("SELECT 'secmautos' as sistema, id, usuario as username, email, nombre as nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoSecmautos->query("SELECT 'secmautos' as sistema, id, username, email, nombre_completo, rol, activo, fecha_registro as created_at FROM users ORDER BY id");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -124,7 +124,7 @@ class UsersController
     {
         if (!$this->pdoSecmrrhh) return [];
         try {
-            $stmt = $this->pdoSecmrrhh->query("SELECT 'secmrrhh' as sistema, id, username, email, nombre as nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoSecmrrhh->query("SELECT 'secmrrhh' as sistema, id_usuario as id, username, email, nombre_completo, rol, CASE WHEN estado='activo' THEN 1 ELSE 0 END as activo, NOW() as created_at FROM usuarios ORDER BY id_usuario");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -135,7 +135,7 @@ class UsersController
     {
         if (!$this->pdoPsitios) return [];
         try {
-            $stmt = $this->pdoPsitios->query("SELECT 'Psitios' as sistema, id, username, email, nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoPsitios->query("SELECT 'Psitios' as sistema, id, username, '' as email, username as nombre_completo, role as rol, is_active as activo, created_at FROM users ORDER BY id");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -146,7 +146,7 @@ class UsersController
     {
         if (!$this->pdoSecmagencias) return [];
         try {
-            $stmt = $this->pdoSecmagencias->query("SELECT 'secmagencias' as sistema, id, usuario as username, email, nombre as nombre_completo, rol as rol, activo, created_at FROM usuarios ORDER BY id");
+            $stmt = $this->pdoSecmagencias->query("SELECT 'secmagencias' as sistema, u.id, u.username, u.email, CONCAT(u.nombre, ' ', u.apellido) as nombre_completo, r.nombre as rol, u.activo, NOW() as created_at FROM usuarios u LEFT JOIN roles r ON u.rol_id = r.id ORDER BY u.id");
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];

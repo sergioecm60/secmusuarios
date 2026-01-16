@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Test de Login</h1>
+    <form id="loginForm">
+        <input type="text" id="username" placeholder="Usuario" required>
+        <input type="password" id="password" placeholder="Contraseña" required>
+        <button type="submit">Login</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://secmusuarios.api:8081/api';
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            console.log('Intentando login...');
+            document.getElementById('result').innerHTML = 'Enviando...';
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                document.getElementById('result').innerHTML = `
+                    <h3>Resultado:</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+
+                if (data.success) {
+                    localStorage.setItem('token', data.token);
+                    document.getElementById('result').innerHTML += '<p>¡Login exitoso! Token guardado en localStorage.</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

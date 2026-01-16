@@ -1,42 +1,46 @@
-# SECM Usuarios - Sistema Centralizado
+# SECM Usuarios - Sistema Centralizado de Gestión de Usuarios
 
-Sistema centralizado de gestión de usuarios para los proyectos SECM.
+Sistema centralizado de gestión de usuarios para los proyectos SECM. Permite administrar usuarios de múltiples sistemas desde un único punto.
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 secmusuarios/
 ├── backend/                    # API REST con Slim Framework
 │   ├── config/
-│   │   └── db.php             # Configuración de base de datos
+│   │   └── db.php             # Conexiones a todas las bases de datos
 │   ├── src/
 │   │   ├── Controllers/
-│   │   │   └── AuthController.php
+│   │   │   ├── AuthController.php    # Login, registro, validación
+│   │   │   └── UsersController.php   # Listado de usuarios multi-sistema
 │   │   ├── Middleware/
-│   │   │   └── AuthMiddleware.php
+│   │   │   └── AuthMiddleware.php    # Validación JWT
 │   │   ├── Models/
-│   │   │   └── User.php
+│   │   │   └── User.php              # Modelo de usuario
 │   │   └── Utils/
-│   │       └── JwtHandler.php
+│   │       └── JwtHandler.php        # Manejo de tokens JWT
 │   ├── public/
-│   │   ├── .htaccess
-│   │   └── index.php          # Entry point
+│   │   └── index.php          # Entry point (Slim)
+│   ├── shared/
+│   │   └── SecmAuth.php       # Librería para integrar en otros sistemas
 │   ├── .env.example
 │   └── composer.json
-└── frontend/                   # Frontend vanilla JS + Bootstrap
-    ├── css/
-    │   └── styles.css
-    ├── js/
-    │   ├── auth.js
-    │   ├── login.js
-    │   └── dashboard.js
-    ├── login.html
-    └── dashboard.html
+├── frontend/                   # Frontend vanilla JS + Bootstrap
+│   ├── css/
+│   │   └── styles.css
+│   ├── js/
+│   │   ├── auth.js            # Funciones de autenticación
+│   │   ├── login.js           # Lógica de login
+│   │   └── dashboard.js       # Dashboard con usuarios
+│   ├── login.html
+│   └── dashboard.html
+└── db/
+    └── usuarios.sql           # Schema de la base de datos
 ```
 
-## 🚀 Instalación
+## Instalación (Desarrollo - Laragon)
 
-### Backend
+### 1. Backend
 
 ```bash
 cd C:\laragon\www\secmusuarios\backend
@@ -44,71 +48,89 @@ composer install
 cp .env.example .env
 ```
 
-Configurar `.env` con las credenciales de la base de datos.
+### 2. Configurar .env
 
-### Base de Datos
+```ini
+# Database Principal
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=usuarios
+DB_USER=root
+DB_PASS=
 
-La base de datos `usuarios` con la tabla `users_master` ya debería estar creada.
+# Bases de datos de otros sistemas
+DB_SECMALQUILERES=gestion_alquileres
+DB_SECMTI=portal_db
+DB_SECMAUTOS=secmautos_db
+DB_SECMRRHH=secmrrhh
+DB_PSITIOS=secure_panel_db
+DB_SECMAGENCIAS=sistema_transportes
 
-Crear usuario admin (password: `password`):
-```sql
-INSERT INTO users_master (username, email, password_hash, nombre, apellido, rol, sistema_origen, activo, primer_login)
-VALUES ('admin', 'admin@secm.local', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrador', 'Sistema', 'superadmin', 'secmusuarios', 1, 1);
+# JWT - Generar con: php -r "echo base64_encode(random_bytes(32));"
+JWT_SECRET=TU_SECRET_AQUI
+JWT_ALGORITHM=HS256
+JWT_EXPIRES_IN=3600
+
+# App
+APP_ENV=development
+APP_DEBUG=true
 ```
 
-## 🔐 API Endpoints
-
-### Público
-- `POST /api/login` - Autenticación
-- `POST /api/register` - Registro de usuarios
-
-### Protegido (requiere token)
-- `GET /api/me` - Datos del usuario actual
-- `GET /api/users` - Listar todos los usuarios (admin/superadmin)
-
-## 👤 Credenciales de Prueba
-
-- **Usuario**: admin
-- **Contraseña**: password
-
-## 🌐 Acceso
-
-- Frontend: `http://localhost/secmusuarios/frontend/login.html`
-- Backend API: `http://secmusuarios.test:8083/api/`
-- API Info: `http://secmusuarios.test:8083/`
-- Panel admin usuarios: `http://localhost:8081/phpmyadmin/index.php?route=/table/structure&db=usuarios&table=users_master`
-
-## 🔌 Integración con otros sistemas
-
-### Uso del API compartido
-
-Para integrar este sistema de autenticación en otros proyectos, puedes usar el archivo compartido `backend/shared/SecmAuth.php`:
-
-```php
-require_once __DIR__ . '/../path/to/SecmAuth.php';
-
-// Validar usuario para el sistema actual
-$usuario = SecmAuth::validarPara('secmalquileres');
-if (!$usuario) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Acceso denegado']);
-    exit;
-}
-
-// Usar datos del usuario
-echo "Bienvenido " . $usuario['username'];
-echo "Tu rol es: " . $usuario['rol'];
-```
-
-### Endpoint de Login (POST /api/login)
+### 3. Base de Datos
 
 ```bash
-curl -X POST http://secmusuarios.test:8083/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"password"}'
+mysql -u root -p < db/usuarios.sql
 ```
 
-Respuesta:
+### 4. Crear Usuario Admin
+
+```bash
+# Generar hash de contraseña
+php -r "echo password_hash('admin123', PASSWORD_ARGON2ID);"
+```
+
+```sql
+INSERT INTO users_master (username, email, password_hash, nombre, apellido, rol, sistema_origen)
+VALUES ('admin', 'admin@secm.local', 'HASH_GENERADO', 'Admin', 'Sistema', 'superadmin', 'secmusuarios');
+```
+
+## API Endpoints
+
+### Públicos
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/login` | Autenticación |
+| POST | `/api/register` | Registro de usuarios |
+| POST | `/api/validate` | Validar token JWT |
+
+### Protegidos (requieren token)
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/me` | Datos del usuario actual |
+| GET | `/api/users` | Listar usuarios de users_master |
+| GET | `/api/users/all` | Listar usuarios de TODOS los sistemas |
+
+## Acceso (Laragon)
+
+- **Frontend**: `http://secmusuarios.test:8081/login.html`
+- **Dashboard**: `http://secmusuarios.test:8081/dashboard.html`
+- **API Info**: `http://secmusuarios.test:8081/api`
+
+## Credenciales de Prueba
+
+- **Usuario**: `admin`
+- **Contraseña**: `admin123`
+
+## Ejemplo de Uso del API
+
+### Login
+```bash
+curl -X POST http://secmusuarios.test:8081/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+**Respuesta:**
 ```json
 {
   "success": true,
@@ -116,39 +138,47 @@ Respuesta:
   "user": {
     "id": 1,
     "username": "admin",
-    "nombre_completo": "Administrador Sistema",
+    "nombre_completo": "Admin Sistema",
     "email": "admin@secm.local",
     "rol": "superadmin",
-    "apps": ["secmalquileres", "secmti", "secmautos", "secmrrhh", "Psitios", "secmagencias"],
-    "primer_login": 1
+    "apps": ["secmalquileres", "secmti", "secmautos", "secmrrhh", "Psitios", "secmagencias"]
   }
 }
 ```
 
-### Endpoint de Validación (POST /api/validate)
-
+### Obtener usuarios de todos los sistemas
 ```bash
-curl -X POST http://secmusuarios.test:8083/api/validate \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+curl http://secmusuarios.test:8081/api/users/all \
+  -H "Authorization: Bearer TU_TOKEN"
 ```
 
-Respuesta:
-```json
-{
-  "success": true,
-  "user_id": 1,
-  "username": "admin",
-  "rol": "superadmin",
-  "apps": ["secmalquileres", "secmti", "secmautos", "secmrrhh", "Psitios", "secmagencias"]
+## Integración con Otros Sistemas
+
+Usar `backend/shared/SecmAuth.php`:
+
+```php
+require_once '/path/to/SecmAuth.php';
+
+$usuario = SecmAuth::validarPara('secmalquileres');
+if (!$usuario) {
+    http_response_code(403);
+    exit(json_encode(['error' => 'Acceso denegado']));
 }
+
+echo "Bienvenido " . $usuario['username'];
 ```
 
-### Sistemas disponibles
+## Sistemas Integrados
 
-El JWT incluye una lista de apps permitidas:
-- `secmalquileres` - Sistema de gestión de alquileres
-- `secmti` - Portal de TI
-- `secmautos` - Gestión de vehículos
-- `secmrrhh` - Recursos humanos
-- `Psitios` - Panel de servicios seguros
-- `secmagencias` - Sistema de transportes
+| Sistema | Base de Datos | Tabla |
+|---------|---------------|-------|
+| SECM Usuarios | usuarios | users_master |
+| Alquileres | gestion_alquileres | users |
+| TI Portal | portal_db | users |
+| RRHH | secmrrhh | usuarios |
+| Psitios | secure_panel_db | users |
+| Agencias | sistema_transportes | usuarios |
+
+## Licencia
+
+GNU GPL v3 - Copyleft 2026 Sergio Cabrera

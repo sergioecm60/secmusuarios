@@ -25,3 +25,6 @@ logs/
 
 # Claude
 .claude/
+
+# Documentation (local only)
+docs/

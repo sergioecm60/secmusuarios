@@ -42,6 +42,16 @@ class JwtHandler
         }
     }
 
+    public function getExpiresIn(): int
+    {
+        return $this->expiresIn;
+    }
+
+    public function getSecret(): string
+    {
+        return $this->secret;
+    }
+
     public static function generar(string $secret, array $payload, int $expiresIn = 3600): string
     {
         $issuedAt = time();

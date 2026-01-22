@@ -6,6 +6,7 @@ frontend/.env
 backend/vendor/
 node_modules/
 
+
 # IDE
 .idea/
 .vscode/

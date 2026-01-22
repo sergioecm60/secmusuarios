@@ -133,9 +133,14 @@
                 <div class="card mt-3" id="usersCard">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Listado de Usuarios</h5>
-                        <button class="btn btn-sm btn-primary" id="btnRefreshUsers">
-                            <i class="bi bi-arrow-clockwise"></i> Actualizar
-                        </button>
+                        <div>
+                            <button class="btn btn-sm btn-success me-2" id="btnCreateUser">
+                                <i class="bi bi-plus-lg"></i> Nuevo Usuario
+                            </button>
+                            <button class="btn btn-sm btn-primary" id="btnRefreshUsers">
+                                <i class="bi bi-arrow-clockwise"></i> Actualizar
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div id="usersTableContainer">
@@ -153,6 +158,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/adjustFormFieldsForSystem.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -109,6 +109,9 @@ VALUES ('admin', 'admin@secm.local', 'HASH_GENERADO', 'Admin', 'Sistema', 'super
 | GET | `/api/me` | Datos del usuario actual |
 | GET | `/api/users` | Listar usuarios de users_master |
 | GET | `/api/users/all` | Listar usuarios de TODOS los sistemas |
+| POST | `/api/users` | Crear usuario en sistema maestro y sistemas seleccionados |
+| PUT | `/api/users` | Actualizar usuario en sistema maestro y sistemas seleccionados |
+| DELETE | `/api/users` | Eliminar usuario de TODOS los sistemas |
 
 ## Acceso (Laragon)
 
@@ -152,6 +155,49 @@ curl http://secmusuarios.test:8081/api/users/all \
   -H "Authorization: Bearer TU_TOKEN"
 ```
 
+### Crear usuario en múltiples sistemas
+```bash
+curl -X POST http://secmusuarios.test:8081/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{
+    "username": "juan",
+    "email": "juan@ejemplo.com",
+    "password": "clave123",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "rol": "user",
+    "systems": ["secmalquileres", "secmti", "secmautos"]
+  }'
+```
+
+### Actualizar usuario en múltiples sistemas
+```bash
+curl -X PUT http://secmusuarios.test:8081/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{
+    "id": 1,
+    "username": "juan",
+    "email": "nuevo@email.com",
+    "rol": "admin",
+    "activo": 1,
+    "systems": ["secmalquileres", "secmti", "secmautos"]
+  }'
+```
+
+### Eliminar usuario de todos los sistemas
+```bash
+curl -X DELETE http://secmusuarios.test:8081/api/users \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN" \
+  -d '{
+    "id": 1,
+    "username": "juan",
+    "systems": ["secmusuarios", "secmalquileres", "secmti", "secmautos", "secmrrhh", "Psitios", "secmagencias"]
+  }'
+```
+
 ## Integración con Otros Sistemas
 
 Usar `backend/shared/SecmAuth.php`:
@@ -178,6 +224,34 @@ echo "Bienvenido " . $usuario['username'];
 | RRHH | secmrrhh | usuarios |
 | Psitios | secure_panel_db | users |
 | Agencias | sistema_transportes | usuarios |
+
+## Gestión Multi-Sistema
+
+El sistema permite gestionar usuarios de forma centralizada. Al crear un usuario:
+
+1. **Usuario Maestro**: Se crea automáticamente en la tabla `users_master`
+2. **Sistemas Adicionales**: Puedes seleccionar en qué sistemas replicar el usuario mediante checkboxes
+
+### Funcionalidades
+
+- **Crear Usuario**: Formulario único con selección de sistemas mediante checkboxes
+- **Editar Usuario**: Modificar datos en sistema maestro y sistemas seleccionados
+- **Cambiar Estado**: Activar/deshabilitar usuario rápidamente en todos los sistemas
+- **Eliminar Usuario**: Eliminar usuario de TODOS los sistemas (solo superadmin)
+
+### Compatibilidad de Sistemas
+
+Para asegurar compatibilidad completa, ejecuta los scripts de compatibilidad:
+
+```bash
+# Para secmalquileres
+mysql -u root -p gestion_alquileres < db/compatibilidad_secmalquileres.sql
+
+# Para secmautos
+mysql -u root -p secmautos_db < db/compatibilidad_secmautos.sql
+```
+
+Ver [db/README_COMPATIBILIDAD.md](db/README_COMPATIBILIDAD.md) para más detalles.
 
 ## Licencia
 

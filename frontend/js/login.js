@@ -26,10 +26,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Resultado del login:', result);
 
         if (result.success) {
-            showAlert('success', '¡Inicio de sesión exitoso!');
+            showAlert('success', '¡Inicio de sesion exitoso! Redirigiendo...');
             setTimeout(() => {
                 window.location.href = redirectUrl;
             }, 1000);
+        } else if (result.locked) {
+            // Cuenta bloqueada
+            const message = result.remainingMinutes
+                ? `${result.error}. Intente nuevamente en ${result.remainingMinutes} minuto(s).`
+                : result.error;
+            showAlert('warning', `<i class="bi bi-lock-fill me-2"></i>${message}`);
+        } else if (result.attemptsRemaining !== undefined) {
+            // Login fallido con intentos restantes
+            const attemptsMsg = result.attemptsRemaining > 0
+                ? `<br><small>Intentos restantes: ${result.attemptsRemaining}</small>`
+                : '<br><small class="text-danger">Ultimo intento antes del bloqueo</small>';
+            showAlert('danger', `${result.error}${attemptsMsg}`);
         } else {
             showAlert('danger', result.error);
         }
@@ -41,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginText.textContent = 'Iniciando...';
             loginSpinner.classList.remove('d-none');
         } else {
-            loginText.textContent = 'Iniciar Sesión';
+            loginText.textContent = 'Iniciar Sesion';
             loginSpinner.classList.add('d-none');
         }
     }

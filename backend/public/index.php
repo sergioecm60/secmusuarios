@@ -7,9 +7,12 @@ use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use App\Controllers\AuthController;
 use App\Controllers\UsersController;
+use App\Controllers\AuditController;
 use App\Middleware\AuthMiddleware;
 use App\Models\User;
 use App\Utils\JwtHandler;
+use App\Services\AuditService;
+use App\Services\RefreshTokenService;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -33,12 +36,29 @@ $container->set(JwtHandler::class, function () {
     return new JwtHandler();
 });
 
-$container->set(AuthController::class, function ($c) {
-    return new AuthController($c->get(User::class), $c->get(JwtHandler::class));
+$container->set(AuditService::class, function () use ($pdo) {
+    return new AuditService($pdo);
 });
 
-$container->set(UsersController::class, function () use ($pdo) {
-    return new UsersController($pdo);
+$container->set(RefreshTokenService::class, function () use ($pdo) {
+    return new RefreshTokenService($pdo);
+});
+
+$container->set(AuthController::class, function ($c) {
+    return new AuthController(
+        $c->get(User::class),
+        $c->get(JwtHandler::class),
+        $c->get(AuditService::class),
+        $c->get(RefreshTokenService::class)
+    );
+});
+
+$container->set(UsersController::class, function ($c) use ($pdo) {
+    return new UsersController($pdo, $c->get(AuditService::class));
+});
+
+$container->set(AuditController::class, function ($c) {
+    return new AuditController($c->get(AuditService::class));
 });
 
 $container->set(AuthMiddleware::class, function ($c) {
@@ -49,12 +69,21 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     $group->post('/login', [AuthController::class, 'login']);
     $group->post('/register', [AuthController::class, 'register']);
     $group->post('/validate', [AuthController::class, 'validate']);
+    $group->post('/refresh', [AuthController::class, 'refresh']);
 });
 
 $app->group('/api', function (RouteCollectorProxy $group) {
     $group->get('/me', [AuthController::class, 'me']);
     $group->get('/users', [AuthController::class, 'getAllUsers']);
     $group->get('/users/all', [UsersController::class, 'getAllSystemsUsers']);
+    $group->post('/users', [UsersController::class, 'createUser']);
+    $group->put('/users', [UsersController::class, 'updateUser']);
+    $group->delete('/users', [UsersController::class, 'deleteUser']);
+    $group->post('/users/{id}/unlock', [UsersController::class, 'unlockUser']);
+    $group->get('/audit', [AuditController::class, 'getAuditLogs']);
+    $group->post('/logout', [AuthController::class, 'logout']);
+    $group->post('/logout-all', [AuthController::class, 'logoutAll']);
+    $group->get('/sessions', [AuthController::class, 'getSessions']);
 })->add(new AuthMiddleware($container->get(JwtHandler::class)));
 
 $app->get('/', function ($request, $response) {

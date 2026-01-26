@@ -18,18 +18,31 @@ async function loadUserData() {
 
         if (data.success) {
             updateUserInfo(data.user);
+            const initials = getInitials(data.user.nombre_completo || data.user.username);
             document.getElementById('userCard').innerHTML = `
-                <p class="mb-1"><strong>Nombre:</strong> ${data.user.nombre_completo}</p>
-                <p class="mb-1"><strong>Usuario:</strong> ${data.user.username}</p>
-                <p class="mb-1"><strong>Email:</strong> ${data.user.email}</p>
-                <p class="mb-0"><strong>Rol:</strong>
-                    <span class="badge ${getRolBadgeClass(data.user.rol)}">${data.user.rol}</span>
-                </p>
+                <div class="user-avatar">${initials}</div>
+                <div class="user-details">
+                    <p class="mb-1"><strong style="font-size: 18px;">${data.user.nombre_completo || data.user.username}</strong></p>
+                    <p class="mb-1"><i class="bi bi-person me-1"></i> ${data.user.username}</p>
+                    <p class="mb-1"><i class="bi bi-envelope me-1"></i> ${data.user.email || '-'}</p>
+                    <p class="mb-0">
+                        <span class="badge ${getRolBadgeClass(data.user.rol)}">${data.user.rol}</span>
+                    </p>
+                </div>
             `;
         }
     } catch (error) {
         console.error('Error loading user data:', error);
     }
+}
+
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.split(' ').filter(p => p.length > 0);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
 }
 
 async function loadMasterUsers() {
@@ -93,68 +106,78 @@ function renderUsersTable(data) {
         'Psitios': 'Sitios Seguros',
         'secmagencias': 'Agencias'
     };
+    const systemIcons = {
+        'secmusuarios': 'bi-shield-lock-fill',
+        'secmalquileres': 'bi-building',
+        'secmti': 'bi-hdd-network-fill',
+        'secmautos': 'bi-car-front-fill',
+        'secmrrhh': 'bi-person-badge-fill',
+        'Psitios': 'bi-key-fill',
+        'secmagencias': 'bi-ticket-perforated-fill'
+    };
 
-    let html = '<div class="accordion" id="usersAccordion">';
+    let html = '<div class="accordion">';
 
     systems.forEach((system, index) => {
         const users = data[system] || [];
-        const active = 'collapse' + index;
+        const isOpen = index === 0;
 
         html += `
             <div class="accordion-item">
-                <h2 class="accordion-header" id="heading${index}">
-                    <button class="accordion-button ${index === 0 ? '' : 'collapsed'}" type="button" data-bs-toggle="collapse" data-bs-target="#${active}" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="${active}">
+                <div class="accordion-header">
+                    <button class="accordion-button ${isOpen ? '' : 'collapsed'}" onclick="toggleAccordion(this)">
+                        <i class="bi ${systemIcons[system]} me-2"></i>
                         <strong>${systemNames[system] || system}</strong>
-                        <span class="badge bg-primary ms-2">${users.length} usuarios</span>
-                        <button class="btn btn-sm btn-outline-light ms-auto" onclick="event.stopPropagation(); openCreateUserModal('${system}')">
-                            <i class="bi bi-plus-lg"></i> Nuevo Usuario
-                        </button>
+                        <span class="badge badge-primary ms-2">${users.length}</span>
                     </button>
-                </h2>
-                <div id="${active}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" data-bs-parent="#usersAccordion" aria-labelledby="heading${index}">
-                    <div class="accordion-body">
-                        ${users.length === 0 ? '<p class="text-muted">No hay usuarios en este sistema</p>' : `
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Usuario</th>
-                                            <th>Nombre Completo</th>
-                                            <th>Email</th>
-                                            <th>Rol</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${users.map(user => `
-                                            <tr>
-                                                <td>${user.id}</td>
-                                                <td><strong>${user.username}</strong></td>
-                                                <td>${user.nombre_completo || '-'}</td>
-                                                <td>${user.email || '-'}</td>
-                                                <td><span class="badge ${getRolBadgeClass(user.rol)}">${user.rol}</span></td>
-                                                <td>
-                                                    <span class="badge ${user.activo ? 'bg-success' : 'bg-danger'}">
-                                                        ${user.activo ? 'Activo' : 'Inactivo'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-primary me-1" onclick="openEditUserModal('${system}', ${user.id}, ${JSON.stringify(user).replace(/"/g, '&quot;')})">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser('${system}', ${user.id}, '${user.username}')">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
-                        `}
+                </div>
+                <div class="accordion-body" style="display: ${isOpen ? 'block' : 'none'};">
+                    <div style="margin-bottom: 16px; text-align: right;">
+                        <button class="btn btn-success btn-sm" onclick="openCreateUserModal('${system}')">
+                            <i class="bi bi-plus-lg"></i> Nuevo en ${systemNames[system]}
+                        </button>
                     </div>
+                    ${users.length === 0 ? '<p class="text-muted text-center" style="padding: 40px;">No hay usuarios en este sistema</p>' : `
+                        <div class="table-container">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Usuario</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Estado</th>
+                                        <th style="text-align: center;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${users.map(user => `
+                                        <tr>
+                                            <td style="color: var(--text-muted);">#${user.id}</td>
+                                            <td><strong>${user.username}</strong></td>
+                                            <td>${user.nombre_completo || '-'}</td>
+                                            <td>${user.email || '-'}</td>
+                                            <td><span class="badge ${getRolBadgeClass(user.rol)}">${user.rol}</span></td>
+                                            <td>
+                                                <span class="badge ${user.activo ? 'badge-success' : 'badge-danger'}">
+                                                    ${user.activo ? 'Activo' : 'Inactivo'}
+                                                </span>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <button class="btn btn-primary btn-sm me-1" onclick="openEditUserModal('${system}', ${user.id}, ${JSON.stringify(user).replace(/"/g, '&quot;')})" title="Editar">
+                                                    <i class="bi bi-pencil-fill"></i>
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="deleteUser('${system}', ${user.id}, '${user.username}')" title="Eliminar">
+                                                    <i class="bi bi-trash-fill"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
                 </div>
             </div>
         `;
@@ -162,6 +185,22 @@ function renderUsersTable(data) {
 
     html += '</div>';
     container.innerHTML = html;
+}
+
+function toggleAccordion(button) {
+    const accordionItem = button.closest('.accordion-item');
+    const body = accordionItem.querySelector('.accordion-body');
+    const isOpen = body.style.display !== 'none';
+
+    // Close all
+    document.querySelectorAll('.accordion-body').forEach(b => b.style.display = 'none');
+    document.querySelectorAll('.accordion-button').forEach(b => b.classList.add('collapsed'));
+
+    // Toggle current
+    if (!isOpen) {
+        body.style.display = 'block';
+        button.classList.remove('collapsed');
+    }
 }
 
 function updateUserInfo(user) {
@@ -247,55 +286,47 @@ async function openCreateUserModal(sistema) {
     ` : '';
 
     const modalHtml = `
-        <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal show" id="userModal" style="display: flex;">
             <div class="modal-dialog ${showSystemSelection ? 'modal-lg' : ''}">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Crear Usuario ${showSystemSelection ? '' : 'en ' + (systemNames[sistema] || sistema)}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" onclick="closeModal()"></button>
                     </div>
                     <div class="modal-body">
                         <form id="userForm">
                             <input type="hidden" id="modalSistema" value="${sistema}">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Usuario *</label>
-                                        <input type="text" class="form-control" id="modalUsername" required>
-                                    </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group">
+                                    <label>Usuario *</label>
+                                    <input type="text" id="modalUsername" required>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="modalEmail">
-                                    </div>
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="modalEmail">
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contrasena *</label>
-                                <input type="password" class="form-control" id="modalPassword" required>
+                            <div class="form-group">
+                                <label>Contrasena *</label>
+                                <input type="password" id="modalPassword" required>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3" id="nombreContainer">
-                                        <label class="form-label">Nombre</label>
-                                        <input type="text" class="form-control" id="modalNombre">
-                                    </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" id="nombreContainer">
+                                    <label>Nombre</label>
+                                    <input type="text" id="modalNombre">
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3" id="apellidoContainer">
-                                        <label class="form-label">Apellido</label>
-                                        <input type="text" class="form-control" id="modalApellido">
-                                    </div>
+                                <div class="form-group" id="apellidoContainer">
+                                    <label>Apellido</label>
+                                    <input type="text" id="modalApellido">
                                 </div>
                             </div>
-                            <div class="mb-3" id="nombreCompletoContainer" style="display:none;">
-                                <label class="form-label">Nombre Completo</label>
-                                <input type="text" class="form-control" id="modalNombreCompleto">
+                            <div class="form-group" id="nombreCompletoContainer" style="display:none;">
+                                <label>Nombre Completo</label>
+                                <input type="text" id="modalNombreCompleto">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Rol</label>
-                                <select class="form-select" id="modalRol">
+                            <div class="form-group">
+                                <label>Rol</label>
+                                <select id="modalRol">
                                     <option value="user">Usuario</option>
                                     <option value="admin">Admin</option>
                                     <option value="superadmin">Superadmin</option>
@@ -305,7 +336,7 @@ async function openCreateUserModal(sistema) {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                         <button type="button" class="btn btn-primary" onclick="saveUser('${sistema}', false)">Guardar</button>
                     </div>
                 </div>
@@ -314,14 +345,22 @@ async function openCreateUserModal(sistema) {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('userModal'));
-    modal.show();
+    document.body.style.overflow = 'hidden';
 
-    document.getElementById('userModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
+    // Cerrar al hacer clic fuera del modal
+    document.getElementById('userModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
     });
 
     adjustFormFieldsForSystem(sistema);
+}
+
+function closeModal() {
+    const modal = document.getElementById('userModal');
+    if (modal) {
+        modal.remove();
+        document.body.style.overflow = '';
+    }
 }
 
 async function openEditUserModal(sistema, userId, userData) {
@@ -342,64 +381,68 @@ async function openEditUserModal(sistema, userId, userData) {
     };
 
     const modalHtml = `
-        <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal show" id="userModal" style="display: flex;">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Editar Usuario #${userId} - ${systemNames[sistema] || sistema}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close" onclick="closeModal()"></button>
                     </div>
                     <div class="modal-body">
                         <form id="userForm">
                             <input type="hidden" id="modalUserId" value="${userId}">
                             <input type="hidden" id="modalSistema" value="${sistema}">
-                            <div class="mb-3">
-                                <label class="form-label">Usuario</label>
-                                <input type="text" class="form-control" id="modalUsername" value="${userData.username}">
+                            <div class="form-group">
+                                <label>Usuario</label>
+                                <input type="text" id="modalUsername" value="${userData.username}">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" id="modalEmail" value="${userData.email || ''}">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="modalEmail" value="${userData.email || ''}">
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Nueva Contraseña (dejar vacío para no cambiar)</label>
-                                <input type="password" class="form-control" id="modalPassword">
+                            <div class="form-group">
+                                <label>Nueva Contrasena (dejar vacio para no cambiar)</label>
+                                <input type="password" id="modalPassword">
                             </div>
-                            <div class="mb-3" id="nombreContainer">
-                                <label class="form-label">Nombre</label>
-                                <input type="text" class="form-control" id="modalNombre" value="${userData.nombre || ''}">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group" id="nombreContainer">
+                                    <label>Nombre</label>
+                                    <input type="text" id="modalNombre" value="${userData.nombre || ''}">
+                                </div>
+                                <div class="form-group" id="apellidoContainer">
+                                    <label>Apellido</label>
+                                    <input type="text" id="modalApellido" value="${userData.apellido || ''}">
+                                </div>
                             </div>
-                            <div class="mb-3" id="apellidoContainer">
-                                <label class="form-label">Apellido</label>
-                                <input type="text" class="form-control" id="modalApellido" value="${userData.apellido || ''}">
+                            <div class="form-group" id="nombreCompletoContainer" style="display:none;">
+                                <label>Nombre Completo</label>
+                                <input type="text" id="modalNombreCompleto" value="${userData.nombre_completo || ''}">
                             </div>
-                            <div class="mb-3" id="nombreCompletoContainer" style="display:none;">
-                                <label class="form-label">Nombre Completo</label>
-                                <input type="text" class="form-control" id="modalNombreCompleto" value="${userData.nombre_completo || ''}">
+                            <div class="form-group" id="fullNameContainer" style="display:none;">
+                                <label>Full Name</label>
+                                <input type="text" id="modalFullName" value="${userData.full_name || ''}">
                             </div>
-                            <div class="mb-3" id="fullNameContainer" style="display:none;">
-                                <label class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="modalFullName" value="${userData.full_name || ''}">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Rol</label>
-                                <select class="form-select" id="modalRol">
-                                    <option value="user" ${userData.rol === 'user' ? 'selected' : ''}>Usuario</option>
-                                    <option value="admin" ${userData.rol === 'admin' ? 'selected' : ''}>Admin</option>
-                                    <option value="superadmin" ${userData.rol === 'superadmin' ? 'selected' : ''}>Superadmin</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Estado</label>
-                                <select class="form-select" id="modalActivo">
-                                    <option value="1" ${userData.activo ? 'selected' : ''}>Activo</option>
-                                    <option value="0" ${!userData.activo ? 'selected' : ''}>Inactivo</option>
-                                </select>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                                <div class="form-group">
+                                    <label>Rol</label>
+                                    <select id="modalRol">
+                                        <option value="user" ${userData.rol === 'user' ? 'selected' : ''}>Usuario</option>
+                                        <option value="admin" ${userData.rol === 'admin' ? 'selected' : ''}>Admin</option>
+                                        <option value="superadmin" ${userData.rol === 'superadmin' ? 'selected' : ''}>Superadmin</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Estado</label>
+                                    <select id="modalActivo">
+                                        <option value="1" ${userData.activo ? 'selected' : ''}>Activo</option>
+                                        <option value="0" ${!userData.activo ? 'selected' : ''}>Inactivo</option>
+                                    </select>
+                                </div>
                             </div>
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
                         <button type="button" class="btn btn-primary" onclick="saveUser('${sistema}', true)">Guardar Cambios</button>
                     </div>
                 </div>
@@ -408,11 +451,11 @@ async function openEditUserModal(sistema, userId, userData) {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('userModal'));
-    modal.show();
+    document.body.style.overflow = 'hidden';
 
-    document.getElementById('userModal').addEventListener('hidden.bs.modal', function () {
-        this.remove();
+    // Cerrar al hacer clic fuera del modal
+    document.getElementById('userModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
     });
 
     adjustFormFieldsForSystem(sistema);
@@ -506,8 +549,7 @@ async function saveUser(sistema, isEdit) {
                 alert(isEdit ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
             }
 
-            const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
-            modal.hide();
+            closeModal();
             await loadMasterUsers();
         } else {
             alert('Error: ' + (result.error || 'Error desconocido'));

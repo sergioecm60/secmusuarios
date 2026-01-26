@@ -14,56 +14,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
 
-        console.log('Intentando login con:', username);
-        console.log('URL API:', API_URL);
-
         setLoading(true);
 
         const result = await login(username, password);
 
         setLoading(false);
 
-        console.log('Resultado del login:', result);
-
         if (result.success) {
-            showAlert('success', '¡Inicio de sesion exitoso! Redirigiendo...');
+            showAlert('success', '<i class="bi bi-check-circle-fill me-2"></i>Inicio de sesion exitoso! Redirigiendo...');
             setTimeout(() => {
                 window.location.href = redirectUrl;
             }, 1000);
         } else if (result.locked) {
-            // Cuenta bloqueada
             const message = result.remainingMinutes
                 ? `${result.error}. Intente nuevamente en ${result.remainingMinutes} minuto(s).`
                 : result.error;
             showAlert('warning', `<i class="bi bi-lock-fill me-2"></i>${message}`);
         } else if (result.attemptsRemaining !== undefined) {
-            // Login fallido con intentos restantes
             const attemptsMsg = result.attemptsRemaining > 0
-                ? `<br><small>Intentos restantes: ${result.attemptsRemaining}</small>`
-                : '<br><small class="text-danger">Ultimo intento antes del bloqueo</small>';
-            showAlert('danger', `${result.error}${attemptsMsg}`);
+                ? `<br><small style="opacity: 0.8;">Intentos restantes: ${result.attemptsRemaining}</small>`
+                : '<br><small style="color: #ef4444;">Ultimo intento antes del bloqueo</small>';
+            showAlert('danger', `<i class="bi bi-exclamation-triangle-fill me-2"></i>${result.error}${attemptsMsg}`);
         } else {
-            showAlert('danger', result.error);
+            showAlert('danger', `<i class="bi bi-exclamation-triangle-fill me-2"></i>${result.error}`);
         }
     });
 
     function setLoading(isLoading) {
         btnLogin.disabled = isLoading;
         if (isLoading) {
-            loginText.textContent = 'Iniciando...';
+            loginText.innerHTML = '<i class="bi bi-hourglass-split"></i> Iniciando...';
             loginSpinner.classList.remove('d-none');
         } else {
-            loginText.textContent = 'Iniciar Sesion';
+            loginText.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Iniciar Sesion';
             loginSpinner.classList.add('d-none');
         }
     }
 
     function showAlert(type, message) {
         alertContainer.innerHTML = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <div class="alert alert-${type}" style="position: relative; animation: slideIn 0.3s ease;">
                 ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()" style="
+                    position: absolute;
+                    top: 50%;
+                    right: 12px;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    font-size: 18px;
+                    cursor: pointer;
+                    opacity: 0.7;
+                    color: inherit;
+                ">&times;</button>
             </div>
         `;
+
+        // Auto-hide after 5 seconds for success
+        if (type === 'success') {
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) alert.remove();
+            }, 5000);
+        }
     }
 });

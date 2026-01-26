@@ -528,19 +528,34 @@ class UsersController
     {
         if (!$this->pdoSecmrrhh) return ['success' => false, 'error' => 'Conexión no disponible'];
 
-        $rolMapping = [
+        // Mapeo de roles: usamos slug para buscar en la BD
+        $slugMapping = [
             'user' => 'usuario',
             'admin' => 'admin',
-            'superadmin' => 'admin'
+            'superadmin' => 'superadmin'
         ];
 
-        $rol = $rolMapping[$data['rol'] ?? 'user'] ?? 'usuario';
+        $slug = $slugMapping[$data['rol'] ?? 'user'] ?? 'usuario';
 
         try {
-            $stmt = $this->pdoSecmrrhh->prepare("SELECT id_rol FROM roles WHERE nombre = ? LIMIT 1");
-            $stmt->execute([$rol]);
+            // Buscar rol por slug (más confiable que por nombre)
+            $stmt = $this->pdoSecmrrhh->prepare("SELECT id_rol, nombre FROM roles WHERE slug = ? LIMIT 1");
+            $stmt->execute([$slug]);
             $rolRow = $stmt->fetch();
-            $idRol = $rolRow ? $rolRow['id_rol'] : null;
+
+            if (!$rolRow) {
+                // Fallback: buscar rol por defecto (Usuario)
+                $stmt = $this->pdoSecmrrhh->prepare("SELECT id_rol, nombre FROM roles WHERE slug = 'usuario' LIMIT 1");
+                $stmt->execute();
+                $rolRow = $stmt->fetch();
+            }
+
+            if (!$rolRow) {
+                return ['success' => false, 'error' => 'No se encontró rol válido en secmrrhh'];
+            }
+
+            $idRol = $rolRow['id_rol'];
+            $rolNombre = $rolRow['nombre'];
 
             $nombreCompleto = trim(($data['nombre'] ?? '') . ' ' . ($data['apellido'] ?? ''));
 
@@ -552,7 +567,7 @@ class UsersController
                 $data['email'] ?? '',
                 password_hash($data['password'], PASSWORD_ARGON2ID),
                 $nombreCompleto ?: $data['username'],
-                $rol,
+                $slug,
                 $idRol
             ]);
 

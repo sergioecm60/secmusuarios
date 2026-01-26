@@ -4,161 +4,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - SECM Usuarios</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
+    <!-- Theme Selector -->
+    <div class="theme-selector no-print">
+        <button class="theme-btn light" title="Tema Claro"><i class="bi bi-sun-fill"></i></button>
+        <button class="theme-btn dark" title="Tema Oscuro"><i class="bi bi-moon-fill"></i></button>
+        <button class="theme-btn auto" title="Automatico"><i class="bi bi-circle-half"></i></button>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-container">
             <a class="navbar-brand" href="dashboard.html">
-                <i class="bi bi-shield-lock"></i> SECM Usuarios
+                <i class="bi bi-shield-lock-fill"></i>
+                <span>SECM Usuarios</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="dashboard.html">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="linkUsers">
-                            <i class="bi bi-people"></i> Usuarios
-                        </a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center">
-                    <span class="text-white me-3" id="userInfo"></span>
-                    <button class="btn btn-outline-light btn-sm" id="btnLogout">
-                        <i class="bi bi-box-arrow-right"></i> Salir
-                    </button>
-                </div>
+
+            <ul class="navbar-nav">
+                <li>
+                    <a class="nav-link active" href="dashboard.html">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a class="nav-link" href="#" id="linkUsers">
+                        <i class="bi bi-people-fill"></i> Usuarios
+                    </a>
+                </li>
+            </ul>
+
+            <div class="navbar-user">
+                <span class="user-info-nav" id="userInfo"></span>
+                <button class="btn btn-outline-light btn-sm" id="btnLogout">
+                    <i class="bi bi-box-arrow-right"></i> Salir
+                </button>
             </div>
         </div>
     </nav>
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Usuario Actual</h5>
-                        <div id="userCard"></div>
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                <div class="stat-value" id="statTotalUsers">-</div>
+                <div class="stat-label">Total Usuarios</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon"><i class="bi bi-person-check-fill"></i></div>
+                <div class="stat-value" id="statActiveUsers">-</div>
+                <div class="stat-label">Usuarios Activos</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon"><i class="bi bi-shield-fill-check"></i></div>
+                <div class="stat-value" id="statAdmins">-</div>
+                <div class="stat-label">Administradores</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div style="display: grid; grid-template-columns: 320px 1fr; gap: 24px;">
+            <!-- User Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-person-circle"></i> Mi Perfil
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="user-card" id="userCard">
+                        <div class="user-avatar">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="user-details">
+                            <p class="mb-1"><strong>Cargando...</strong></p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-9">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Estadísticas Generales</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="stat-card bg-primary text-white p-3 rounded">
-                                    <h6>Total Usuarios</h6>
-                                    <h2 id="statTotalUsers">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card bg-success text-white p-3 rounded">
-                                    <h6>Usuarios Activos</h6>
-                                    <h2 id="statActiveUsers">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card bg-warning text-dark p-3 rounded">
-                                    <h6>Administradores</h6>
-                                    <h2 id="statAdmins">-</h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Usuarios por Sistema</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div class="stat-card bg-info text-white p-3 rounded">
-                                    <h6>SECM Usuarios</h6>
-                                    <h2 id="statSecmusuarios">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card bg-secondary text-white p-3 rounded">
-                                    <h6>Alquileres</h6>
-                                    <h2 id="statSecmalquileres">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="stat-card bg-dark text-white p-3 rounded">
-                                    <h6>TI Portal</h6>
-                                    <h2 id="statSecmti">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mt-2">
-                                <div class="stat-card bg-danger text-white p-3 rounded">
-                                    <h6>Autos</h6>
-                                    <h2 id="statSecmautos">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mt-2">
-                                <div class="stat-card bg-warning text-dark p-3 rounded">
-                                    <h6>Recursos Humanos</h6>
-                                    <h2 id="statSecmrrhh">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mt-2">
-                                <div class="stat-card bg-primary text-white p-3 rounded">
-                                    <h6>Sitios Seguros</h6>
-                                    <h2 id="statPsitios">-</h2>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mt-2">
-                                <div class="stat-card bg-success text-white p-3 rounded">
-                                    <h6>Agencias</h6>
-                                    <h2 id="statSecmagencias">-</h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Systems Grid -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">
+                        <i class="bi bi-grid-fill"></i> Usuarios por Sistema
+                    </h3>
                 </div>
-                <div class="card mt-3" id="usersCard">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Listado de Usuarios</h5>
-                        <div>
-                            <button class="btn btn-sm btn-success me-2" id="btnCreateUser">
-                                <i class="bi bi-plus-lg"></i> Nuevo Usuario
-                            </button>
-                            <button class="btn btn-sm btn-primary" id="btnRefreshUsers">
-                                <i class="bi bi-arrow-clockwise"></i> Actualizar
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="usersTableContainer">
-                            <div class="text-center">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden">Cargando...</span>
-                                </div>
+                <div class="card-body">
+                    <div class="systems-grid">
+                        <div class="system-card" data-system="secmusuarios">
+                            <div class="system-icon" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
+                                <i class="bi bi-shield-lock-fill"></i>
                             </div>
+                            <div class="system-name">SECM Usuarios</div>
+                            <div class="system-count" id="statSecmusuarios">-</div>
+                        </div>
+                        <div class="system-card" data-system="secmalquileres">
+                            <div class="system-icon" style="background: rgba(100, 116, 139, 0.15); color: #64748b;">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div class="system-name">Alquileres</div>
+                            <div class="system-count" id="statSecmalquileres">-</div>
+                        </div>
+                        <div class="system-card" data-system="secmti">
+                            <div class="system-icon" style="background: rgba(30, 41, 59, 0.15); color: #1e293b;">
+                                <i class="bi bi-hdd-network-fill"></i>
+                            </div>
+                            <div class="system-name">TI Portal</div>
+                            <div class="system-count" id="statSecmti">-</div>
+                        </div>
+                        <div class="system-card" data-system="secmautos">
+                            <div class="system-icon" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">
+                                <i class="bi bi-car-front-fill"></i>
+                            </div>
+                            <div class="system-name">Autos</div>
+                            <div class="system-count" id="statSecmautos">-</div>
+                        </div>
+                        <div class="system-card" data-system="secmrrhh">
+                            <div class="system-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div class="system-name">RRHH</div>
+                            <div class="system-count" id="statSecmrrhh">-</div>
+                        </div>
+                        <div class="system-card" data-system="Psitios">
+                            <div class="system-icon" style="background: rgba(102, 126, 234, 0.15); color: #667eea;">
+                                <i class="bi bi-key-fill"></i>
+                            </div>
+                            <div class="system-name">Sitios Seguros</div>
+                            <div class="system-count" id="statPsitios">-</div>
+                        </div>
+                        <div class="system-card" data-system="secmagencias">
+                            <div class="system-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+                                <i class="bi bi-ticket-perforated-fill"></i>
+                            </div>
+                            <div class="system-name">Agencias</div>
+                            <div class="system-count" id="statSecmagencias">-</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Users Table Card -->
+        <div class="card mt-4" id="usersCard">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="bi bi-table"></i> Listado de Usuarios
+                </h3>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn btn-success btn-sm" id="btnCreateUser">
+                        <i class="bi bi-plus-lg"></i> Nuevo Usuario
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="btnRefreshUsers">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="usersTableContainer">
+                    <div class="text-center" style="padding: 60px 20px;">
+                        <div class="spinner" style="width: 40px; height: 40px; border-width: 3px; border-top-color: var(--primary-color); margin: 0 auto 16px;"></div>
+                        <p class="text-muted">Cargando usuarios...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer" style="background: var(--bg-secondary); color: var(--text-secondary); border-top: 1px solid var(--border-color); margin-top: 40px;">
+        <p>&copy; 2026 SECM Usuarios - Sistema Centralizado de Autenticacion</p>
+        <p>Desarrollado por <a href="mailto:sergiomiers@gmail.com" style="color: var(--primary-color);">Sergio Cabrera Miers</a>
+            <a href="https://wa.me/5491167598452" class="whatsapp-link" target="_blank" title="WhatsApp">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: middle;">
+                    <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                </svg>
+            </a>
+        </p>
+    </footer>
+
     <script src="js/auth.js"></script>
     <script src="js/adjustFormFieldsForSystem.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/theme-switcher.js"></script>
 </body>
 </html>
